@@ -7,7 +7,7 @@
 #include "logging.hpp"
 
 
-namespace rdmaio {
+namespace zrdma {
 
 // The name of the particular port on the RNIC.
 typedef struct {
@@ -166,4 +166,4 @@ struct RNicHandler {
   uint16_t gid;
 };
 
-}  // namespace rdmaio
+}  // namespace zrdma

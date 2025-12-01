@@ -16,7 +16,7 @@ extern std::atomic<bool> cannot_lock_new_primary;
 extern std::atomic<bool> one_backup_fail;
 extern std::atomic<bool> during_backup_recovery;
 
-using namespace rdmaio;
+using namespace zrdma;
 
 struct RemoteNode {
   node_id_t node_id;

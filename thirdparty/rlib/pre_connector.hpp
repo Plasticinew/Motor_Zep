@@ -13,7 +13,7 @@
 #include "logging.hpp"
 
 
-namespace rdmaio {
+namespace zrdma {
 
 constexpr struct timeval default_timeout = {0, 8000};
 constexpr struct timeval no_timeout = {0, 0};  // it means forever
@@ -193,4 +193,4 @@ class PreConnector {  // helper class used to exchange QP information using TCP/
   }
 };
 
-};  // namespace rdmaio
+};  // namespace zrdma

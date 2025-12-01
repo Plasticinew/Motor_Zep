@@ -4,7 +4,7 @@
 #include <mutex>
 
 
-namespace rdmaio {
+namespace zrdma {
 
 /**
  * Simple critical section
@@ -33,20 +33,20 @@ class SCS {
  */
 // MZ: It's too narrow for 16-bit node id and 16-bit worker id in original rlib
 // inline uint32_t get_rc_key(const QPIdx idx) {
-//   return ::rdmaio::encode_qp_id(idx.node_id, RC_ID_BASE + idx.worker_id * 64 + idx.index);
+//   return ::zrdma::encode_qp_id(idx.node_id, RC_ID_BASE + idx.worker_id * 64 + idx.index);
 // }
 
 // inline uint32_t get_ud_key(const QPIdx idx) {
-//   return ::rdmaio::encode_qp_id(idx.worker_id, UD_ID_BASE + idx.index);
+//   return ::zrdma::encode_qp_id(idx.worker_id, UD_ID_BASE + idx.index);
 // }
 
 // MZ: We use 32-bit node id and 32-bit worker id
 inline uint64_t get_rc_key(const QPIdx idx) {
-  return ::rdmaio::encode_qp_64b_id(idx.node_id, idx.worker_id);
+  return ::zrdma::encode_qp_64b_id(idx.node_id, idx.worker_id);
 }
 
 inline uint64_t get_ud_key(const QPIdx idx) {
-  return ::rdmaio::encode_qp_64b_id(idx.worker_id, UD_ID_BASE + idx.index);
+  return ::zrdma::encode_qp_64b_id(idx.worker_id, UD_ID_BASE + idx.index);
 }
 
 /**
@@ -632,4 +632,4 @@ inline __attribute__((always_inline)) void RdmaCtrl::register_qp_callback(connec
   impl_->register_qp_callback(callback);
 }
 
-}  // namespace rdmaio
+}  // namespace zrdma

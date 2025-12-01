@@ -7,7 +7,7 @@
 #include <iostream>
 #include <sstream>
 
-namespace rdmaio {
+namespace zrdma {
 
 /**
  * \def FATAL
@@ -41,36 +41,36 @@ enum loglevel {
 #define unlikely(x) __builtin_expect(!!(x), 0)
 
 #ifndef RDMA_LOG_LEVEL
-#define RDMA_LOG_LEVEL ::rdmaio::DBG
+#define RDMA_LOG_LEVEL ::zrdma::DBG
 #endif
 
 // logging macro definiations
 // default log
 #define RDMA_LOG(n)        \
   if (n >= RDMA_LOG_LEVEL) \
-  ::rdmaio::MessageLogger((char *)__FILE__, __LINE__, n).stream()
+  ::zrdma::MessageLogger((char *)__FILE__, __LINE__, n).stream()
 
 // #define RDMA_LOG(n)        \
-//   if (n != ::rdmaio::INFO && n >= RDMA_LOG_LEVEL) \
-//   ::rdmaio::MessageLogger((char *)__FILE__, __LINE__, n).stream()
+//   if (n != ::zrdma::INFO && n >= RDMA_LOG_LEVEL) \
+//   ::zrdma::MessageLogger((char *)__FILE__, __LINE__, n).stream()
 
 // #define RDMA_LOG(n)        \
 //   if (false) \
-//   ::rdmaio::MessageLogger((char *)__FILE__, __LINE__, n).stream()
+//   ::zrdma::MessageLogger((char *)__FILE__, __LINE__, n).stream()
 
 // log with tag
 #define RDMA_TLOG(n, t)                                           \
   if (n >= RDMA_LOG_LEVEL)                                        \
-  ::rdmaio::MessageLogger((char *)__FILE__, __LINE__, n).stream() \
+  ::zrdma::MessageLogger((char *)__FILE__, __LINE__, n).stream() \
       << "[" << (t) << "]"
 
 #define RDMA_LOG_IF(n, condition)         \
   if (n >= RDMA_LOG_LEVEL && (condition)) \
-  ::rdmaio::MessageLogger((char *)__FILE__, __LINE__, n).stream()
+  ::zrdma::MessageLogger((char *)__FILE__, __LINE__, n).stream()
 
 #define RDMA_ASSERT(condition) \
   if (unlikely(!(condition)))  \
-  ::rdmaio::MessageLogger((char *)__FILE__, __LINE__, ::rdmaio::FATAL + 1).stream() << "Assertion! "
+  ::zrdma::MessageLogger((char *)__FILE__, __LINE__, ::zrdma::FATAL + 1).stream() << "Assertion! "
 
 #define RDMA_VERIFY(n, condition) RDMA_LOG_IF(n, (!(condition)))
 
@@ -87,7 +87,7 @@ class MessageLogger {
       stream_ << "\n";
       std::cout << "\033[" << RDMA_DEBUG_LEVEL_COLOR[std::min(level_, 6)] << "m"
                 << stream_.str() << EndcolorFlag();
-      if (level_ >= ::rdmaio::FATAL)
+      if (level_ >= ::zrdma::FATAL)
         abort();
     }
   }
@@ -128,4 +128,4 @@ class MessageLogger {
   }
 };
 
-};  // namespace rdmaio
+};  // namespace zrdma

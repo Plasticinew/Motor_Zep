@@ -7,7 +7,7 @@
 #include "rnic.hpp"
 
 
-namespace rdmaio {
+namespace zrdma {
 
 // connection status
 enum ConnStatus {
@@ -104,4 +104,4 @@ typedef struct {
   int timeout;
 } RCConfig;
 
-}  // namespace rdmaio
+}  // namespace zrdma

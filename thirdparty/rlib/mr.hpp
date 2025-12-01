@@ -4,7 +4,7 @@
 
 #include "logging.hpp"
 
-namespace rdmaio {
+namespace zrdma {
 
 struct MemoryAttr {
   uintptr_t buf;  // remote address of the remote memory region
@@ -49,4 +49,4 @@ class Memory {
   ibv_mr* mr = nullptr;  // local_mr in the driver
 };
 
-};  // namespace rdmaio
+};  // namespace zrdma

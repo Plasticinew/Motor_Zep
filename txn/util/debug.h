@@ -14,11 +14,11 @@
 #include "base/common.h"
 #include "rlib/logging.hpp"
 
-using namespace rdmaio;
+using namespace zrdma;
 
 #define ASSERT(condition)     \
   if (unlikely(!(condition))) \
-  ::rdmaio::MessageLogger((char*)__FILE__, __LINE__, ::rdmaio::FATAL + 1).stream() << "Assertion! "
+  ::zrdma::MessageLogger((char*)__FILE__, __LINE__, ::zrdma::FATAL + 1).stream() << "Assertion! "
 
 #define ONE_SHOT_LOG(n, tid)       \
   if (n >= RDMA_LOG_LEVEL) \
@@ -40,7 +40,7 @@ class OneShotThreadLogger {
       fout.open(log_file_name);
       fout << stream_.str() << std::endl;
       fout.close();
-      if (level_ >= ::rdmaio::FATAL)
+      if (level_ >= ::zrdma::FATAL)
         abort();
     }
   }
@@ -84,7 +84,7 @@ class LogicalThreadLogger {
       fout.open(log_file_name, std::ios::app);
       fout << stream_.str() << std::endl;
       fout.close();
-      if (level_ >= ::rdmaio::FATAL)
+      if (level_ >= ::zrdma::FATAL)
         abort();
     }
   }
@@ -128,7 +128,7 @@ class LogicalThreadLoggerNoLineNum {
       fout.open(log_file_name, std::ios::app);
       fout << stream_.str() << std::endl;
       fout.close();
-      if (level_ >= ::rdmaio::FATAL)
+      if (level_ >= ::zrdma::FATAL)
         abort();
     }
   }
@@ -173,7 +173,7 @@ class PhysicalThreadLogger {
       fout.open(log_file_name, std::ios::app);
       fout << stream_.str() << std::endl;
       fout.close();
-      if (level_ >= ::rdmaio::FATAL)
+      if (level_ >= ::zrdma::FATAL)
         abort();
     }
   }

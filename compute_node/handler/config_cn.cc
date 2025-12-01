@@ -2,10 +2,10 @@
 // Copyright (c) 2023
 
 #include "handler/handler.h"
-#include "rlib/logging.hpp"
+// #include "rlib/logging.hpp"
 #include "util/json_config.h"
 
-using namespace rdmaio;
+// using namespace zrdma;
 
 void Handler::ConfigureComputeNode(int argc, char* argv[]) {
   // ./run <benchmark_name> <thread_num> <coroutine_num> <isolation_level>

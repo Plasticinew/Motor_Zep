@@ -4,7 +4,7 @@
 #include "qp_impl.hpp"  // hide the implementation
 
 
-namespace rdmaio {
+namespace zrdma {
 
 /**
  * The QP managed by RLib is identified by the QPIdx
@@ -241,37 +241,7 @@ class RRCQP : public QP {
                       uint64_t swap_mask,
                       int flags,
                       uint64_t wr_id = 0) {
-    struct ibv_sge sg;
-    struct ibv_exp_send_wr wr;
-    struct ibv_exp_send_wr* bad_sr;
 
-    memset(&sg, 0, sizeof(sg));
-    sg.addr = (uint64_t)local_buf;
-    sg.length = sizeof(uint64_t);
-    sg.lkey = local_mr_.key;
-
-    memset(&wr, 0, sizeof(wr));
-    wr.wr_id = wr_id;
-    wr.sg_list = &sg;
-    wr.num_sge = 1;
-    wr.next = NULL;
-
-    wr.exp_opcode = IBV_EXP_WR_EXT_MASKED_ATOMIC_CMP_AND_SWP;
-    wr.exp_send_flags = flags | IBV_EXP_SEND_EXT_ATOMIC_INLINE;
-
-    wr.ext_op.masked_atomics.log_arg_sz = 3;
-    wr.ext_op.masked_atomics.remote_addr = (off + remote_mr_.buf);
-    wr.ext_op.masked_atomics.rkey = remote_mr_.key;
-
-    auto& op = wr.ext_op.masked_atomics.wr_data.inline_data.op.cmp_swap;
-    op.compare_val = compare;
-    op.swap_val = swap;
-
-    op.compare_mask = comapre_mask;
-    op.swap_mask = swap_mask;
-
-    auto rc = ibv_exp_post_send(qp_, &wr, &bad_sr);
-    return rc;
   }
 
 
@@ -475,4 +445,4 @@ class RUDQP : public QP {
   bool ready_ = false;
 };
 
-}  // end namespace rdmaio
+}  // end namespace zrdma

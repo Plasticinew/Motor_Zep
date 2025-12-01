@@ -6,7 +6,7 @@
 #include "qp.hpp"
 
 
-namespace rdmaio {
+namespace zrdma {
 
 const int MAX_SERVER_SUPPORTED = 16;
 typedef RUDQP<default_ud_config, MAX_SERVER_SUPPORTED> UDQP;
@@ -119,6 +119,6 @@ class RdmaCtrl {
 
 using RdmaCtrlPtr = std::shared_ptr<RdmaCtrl>;
 
-}  // namespace rdmaio
+}  // namespace zrdma
 
 #include "rdma_ctrl_impl.hpp"  // real implemeatation here

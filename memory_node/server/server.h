@@ -19,7 +19,7 @@
 #include "tatp/tatp_db.h"
 #include "tpcc/tpcc_db.h"
 
-using namespace rdmaio;
+using namespace zrdma;
 
 class Server {
  public:

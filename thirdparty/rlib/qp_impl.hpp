@@ -5,7 +5,7 @@
 #include "pre_connector.hpp"
 
 
-namespace rdmaio {
+namespace zrdma {
 
 const int MAX_INLINE_SIZE = 64;
 
@@ -30,7 +30,7 @@ inline constexpr uint32_t index_mask() {
 }
 
 inline uint32_t mac_mask() {
-  return ::rdmaio::index_mask() << 16;
+  return ::zrdma::index_mask() << 16;
 }
 
 inline uint32_t encode_qp_id(int m, int idx) {
@@ -42,11 +42,11 @@ inline uint64_t encode_qp_64b_id(int m, int idx) {
 }
 
 inline uint32_t decode_qp_mac(uint32_t key) {
-  return (key & ::rdmaio::mac_mask()) >> 16;
+  return (key & ::zrdma::mac_mask()) >> 16;
 }
 
 inline uint32_t decode_qp_index(uint32_t key) {
-  return key & ::rdmaio::index_mask();
+  return key & ::zrdma::index_mask();
 }
 
 class QPImpl {
@@ -311,36 +311,6 @@ class RCQPImpl {
 
   template <RCConfig (*F)(void)>
   static void exp_init(ibv_qp *&qp, ibv_cq *&cq, RNicHandler *rnic) {
-    // create the CQ
-    cq = ibv_create_cq(rnic->ctx, RC_MAX_SEND_SIZE, nullptr, nullptr, 0);
-    RDMA_VERIFY(WARNING, cq != nullptr) << "create cq error: " << strerror(errno);
-
-    // create the QP
-    struct ibv_exp_qp_init_attr attr;
-    memset(&attr, 0, sizeof(attr));
-
-    attr.qp_type = IBV_QPT_RC;
-    attr.sq_sig_all = 0;
-    attr.send_cq = cq;
-    attr.recv_cq = cq;
-    attr.pd = rnic->pd;
-
-    attr.comp_mask = IBV_EXP_QP_INIT_ATTR_CREATE_FLAGS |
-                     IBV_EXP_QP_INIT_ATTR_PD | IBV_EXP_QP_INIT_ATTR_ATOMICS_ARG;
-    attr.max_atomic_arg = 32;
-
-    attr.cap.max_send_wr = RC_MAX_SEND_SIZE;
-    attr.cap.max_recv_wr = RC_MAX_RECV_SIZE;
-    attr.cap.max_send_sge = 1;
-    attr.cap.max_recv_sge = 1;
-    attr.cap.max_inline_data = MAX_INLINE_SIZE;
-
-    qp = ibv_exp_create_qp(rnic->ctx, &attr);
-    RDMA_VERIFY(WARNING, qp != nullptr);
-
-    if (qp) {
-      ready2init<F>(qp, rnic);
-    }
   }
 };
 
@@ -455,4 +425,4 @@ class UDQPImpl {
   }
 };
 
-}  // namespace rdmaio
+}  // namespace zrdma

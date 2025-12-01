@@ -8,7 +8,7 @@
 #include "rlib/rdma_ctrl.hpp"
 #include "scheduler/corotine_scheduler.h"
 
-using namespace rdmaio;
+using namespace zrdma;
 
 static const int MAX_DOORBELL_LEN = 124;
 

@@ -7,7 +7,7 @@
 #include "common.hpp"
 
 
-namespace rdmaio {
+namespace zrdma {
 
 typedef std::function<void(const char*, int, int)> msg_callback_t_;
 
@@ -98,4 +98,4 @@ class MsgAdapter {
   msg_callback_t_ callback_;
 };
 
-};  // namespace rdmaio
+};  // namespace zrdma
