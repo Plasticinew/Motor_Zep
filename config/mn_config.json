@@ -13,7 +13,7 @@
   },
   "remote_compute_nodes": {
     "compute_node_ips": [
-      "10.0.0.7"
+      "10.10.1.1"
     ],
     "compute_node_ports": [
       12345
@@ -21,8 +21,8 @@
   },
   "other_memory_nodes": {
     "memory_node_ips": [
-      "10.0.0.3",
-      "10.0.0.5"
+      "10.10.1.5",
+      "10.10.1.7"
     ],
     "memory_node_ids": [
       1,
