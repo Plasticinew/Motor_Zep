@@ -20,6 +20,7 @@
 #include "util/zipf.h"
 
 using namespace std::placeholders;
+// using std::bind;
 
 ///////////// For control and statistics ///////////////
 std::mutex mux;
@@ -591,16 +592,16 @@ void run_thread(thread_params* params,
     coro_sched->coro_array[coro_i].coro_id = coro_i;
     // Bind workload to coroutine
     if (coro_i == POLL_ROUTINE_ID) {
-      coro_sched->coro_array[coro_i].func = coro_call_t(bind(Poll, _1));
+      coro_sched->coro_array[coro_i].func = coro_call_t(bind(Poll, std::placeholders::_1));
     } else {
       if (bench_name == "tatp") {
-        coro_sched->coro_array[coro_i].func = coro_call_t(bind(RunTATP, _1, coro_i));
+        coro_sched->coro_array[coro_i].func = coro_call_t(bind(RunTATP, std::placeholders::_1, coro_i));
       } else if (bench_name == "smallbank") {
-        coro_sched->coro_array[coro_i].func = coro_call_t(bind(RunSmallBank, _1, coro_i));
+        coro_sched->coro_array[coro_i].func = coro_call_t(bind(RunSmallBank, std::placeholders::_1, coro_i));
       } else if (bench_name == "tpcc") {
-        coro_sched->coro_array[coro_i].func = coro_call_t(bind(RunTPCC, _1, coro_i, 0));
+        coro_sched->coro_array[coro_i].func = coro_call_t(bind(RunTPCC, std::placeholders::_1, coro_i, 0));
       } else if (bench_name == "micro") {
-        coro_sched->coro_array[coro_i].func = coro_call_t(bind(RunMICRO, _1, coro_i));
+        coro_sched->coro_array[coro_i].func = coro_call_t(bind(RunMICRO, std::placeholders::_1, coro_i));
       }
     }
   }
@@ -726,16 +727,16 @@ void recovery(thread_params* params,
     coro_sched->coro_array[coro_i].coro_id = coro_i;
     // Bind workload to coroutine
     if (coro_i == POLL_ROUTINE_ID) {
-      coro_sched->coro_array[coro_i].func = coro_call_t(bind(Poll, _1));
+      coro_sched->coro_array[coro_i].func = coro_call_t(bind(Poll, std::placeholders::_1));
     } else {
       if (bench_name == "tatp") {
-        coro_sched->coro_array[coro_i].func = coro_call_t(bind(RunTATP, _1, coro_i));
+        coro_sched->coro_array[coro_i].func = coro_call_t(bind(RunTATP, std::placeholders::_1, coro_i));
       } else if (bench_name == "smallbank") {
-        coro_sched->coro_array[coro_i].func = coro_call_t(bind(RunSmallBank, _1, coro_i));
+        coro_sched->coro_array[coro_i].func = coro_call_t(bind(RunSmallBank, std::placeholders::_1, coro_i));
       } else if (bench_name == "tpcc") {
-        coro_sched->coro_array[coro_i].func = coro_call_t(bind(RunTPCC, _1, coro_i, 0));
+        coro_sched->coro_array[coro_i].func = coro_call_t(bind(RunTPCC, std::placeholders::_1, coro_i, 0));
       } else if (bench_name == "micro") {
-        coro_sched->coro_array[coro_i].func = coro_call_t(bind(RunMICRO, _1, coro_i));
+        coro_sched->coro_array[coro_i].func = coro_call_t(bind(RunMICRO, std::placeholders::_1, coro_i));
       }
     }
   }

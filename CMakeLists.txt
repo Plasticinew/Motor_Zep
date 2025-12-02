@@ -24,6 +24,8 @@ include_directories(
 
 add_subdirectory(thirdparty/rlib)
 
+add_subdirectory(thirdparty/zrdma)
+
 add_subdirectory(txn)
 
 add_subdirectory(workload)

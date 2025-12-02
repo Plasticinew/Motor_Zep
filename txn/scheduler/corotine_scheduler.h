@@ -8,6 +8,7 @@
 #include "base/common.h"
 #include "rlib/logging.hpp"
 // #include "rlib/rdma_ctrl.hpp"
+#include "zrdma/zQP.h"
 #include "scheduler/coroutine.h"
 
 using namespace zrdma;
@@ -46,11 +47,7 @@ class CoroutineScheduler {
 
   bool RDMAWrite(coro_id_t coro_id, RCQP* qp, char* wt_data, uint64_t remote_offset, size_t size);
 
-  bool RDMAWrite(coro_id_t coro_id, RCQP* qp, char* wt_data, uint64_t remote_offset, size_t size, MemoryAttr& local_mr, MemoryAttr& remote_mr);
-
   void RDMARead(coro_id_t coro_id, RCQP* qp, char* rd_data, uint64_t remote_offset, size_t size);
-
-  bool RDMARead(coro_id_t coro_id, RCQP* qp, char* rd_data, uint64_t remote_offset, size_t size, MemoryAttr& local_mr, MemoryAttr& remote_mr);
 
   bool RDMAReadInv(coro_id_t coro_id, RCQP* qp, char* rd_data, uint64_t remote_offset, size_t size);
 
@@ -136,34 +133,12 @@ bool CoroutineScheduler::RDMAWrite(coro_id_t coro_id, RCQP* qp, char* wt_data, u
 }
 
 ALWAYS_INLINE
-bool CoroutineScheduler::RDMAWrite(coro_id_t coro_id, RCQP* qp, char* wt_data, uint64_t remote_offset, size_t size, MemoryAttr& local_mr, MemoryAttr& remote_mr) {
-  auto rc = qp->post_send_to_mr(local_mr, remote_mr, IBV_WR_RDMA_WRITE, wt_data, size, remote_offset, IBV_SEND_SIGNALED, coro_id);
-  if (rc != SUCC) {
-    RDMA_LOG(ERROR) << "client: post write fail. rc=" << rc << ", tid = " << t_id << ", coroid = " << coro_id;
-    return false;
-  }
-  AddPendingQP(coro_id, qp);
-  return true;
-}
-
-ALWAYS_INLINE
 void CoroutineScheduler::RDMARead(coro_id_t coro_id, RCQP* qp, char* rd_data, uint64_t remote_offset, size_t size) {
   auto rc = qp->post_send(IBV_WR_RDMA_READ, rd_data, size, remote_offset, IBV_SEND_SIGNALED, coro_id);
   if (rc != SUCC) {
     RDMA_LOG(FATAL) << "client: post read fail. rc=" << rc << ", tid = " << t_id << ", coroid = " << coro_id;
   }
   AddPendingQP(coro_id, qp);
-}
-
-ALWAYS_INLINE
-bool CoroutineScheduler::RDMARead(coro_id_t coro_id, RCQP* qp, char* rd_data, uint64_t remote_offset, size_t size, MemoryAttr& local_mr, MemoryAttr& remote_mr) {
-  auto rc = qp->post_send_to_mr(local_mr, remote_mr, IBV_WR_RDMA_READ, rd_data, size, remote_offset, IBV_SEND_SIGNALED, coro_id);
-  if (rc != SUCC) {
-    RDMA_LOG(ERROR) << "client: post read fail. rc=" << rc << ", tid = " << t_id << ", coroid = " << coro_id;
-    return false;
-  }
-  AddPendingQP(coro_id, qp);
-  return true;
 }
 
 ALWAYS_INLINE
@@ -267,7 +242,7 @@ void CoroutineScheduler::PollCompletion(t_id_t tid) {
       continue;
     }
     if (unlikely(wc.status != IBV_WC_SUCCESS)) {
-      TLOG(INFO, tid) << "Bad completion status: " << wc.status << " with error " << ibv_wc_status_str(wc.status) << ";@ node " << qp->idx_.node_id;
+    //   TLOG(INFO, tid) << "Bad completion status: " << wc.status << " with error " << ibv_wc_status_str(wc.status) << ";@ node " << qp->idx_.node_id;
       if (wc.status != IBV_WC_RETRY_EXC_ERR) {
         TLOG(INFO, tid) << "completion status != IBV_WC_RETRY_EXC_ERR. abort()";
         abort();

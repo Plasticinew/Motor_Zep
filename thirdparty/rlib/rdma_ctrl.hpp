@@ -26,7 +26,7 @@ class RdmaCtrl {
     connection_callback_t callback = [](const QPConnArg&) {
       // the default callback does nothing
     },
-    std::string ip = "localhost");
+    std::string ip = "10.10.1.1");
 
   ~RdmaCtrl();
 

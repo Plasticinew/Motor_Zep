@@ -15,7 +15,7 @@ void TXN::RecoverPrimary(table_id_t table_id, PrimaryCrashTime p_crash_time) {
       recover_primary_mux.unlock();
       return;
     }
-
+    usleep(100000);
     Timer timer;
     timer.Start();
 

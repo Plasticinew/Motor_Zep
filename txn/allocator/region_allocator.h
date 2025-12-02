@@ -27,7 +27,9 @@ class LocalRegionAllocator {
     global_mr = (char*)malloc(global_mr_size);
     thread_num = thread_num_per_machine;
     memset(global_mr, 0, global_mr_size);
-    RDMA_ASSERT(global_meta_man->global_rdma_ctrl->register_memory(CLIENT_MR_ID, global_mr, global_mr_size, global_meta_man->opened_rnic));
+    ibv_mr* mr = mr_create(global_meta_man->pd_, (void*)global_mr, global_mr_size);
+    global_meta_man->mr_map[CLIENT_MR_ID] = mr;
+    // RDMA_ASSERT(global_meta_man->global_rdma_ctrl->register_memory(CLIENT_MR_ID, global_mr, global_mr_size, global_meta_man->opened_rnic));
   }
 
   ~LocalRegionAllocator() {
