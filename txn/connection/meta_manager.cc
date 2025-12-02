@@ -75,11 +75,13 @@ MetaManager::MetaManager() {
 
   // RDMA setup
   int local_port = (int)local_node.get("local_port").get_int64();
+
+#if !USE_ZRDMA
   global_rdma_ctrl = std::make_shared<RdmaCtrl>(local_machine_id, local_port);
 
   // Using the first RNIC's first port
   RdmaCtrl::DevIdx idx;
-  idx.dev_id = 0;
+  idx.dev_id = 2;
   idx.port_id = 1;
 
   // Open device
@@ -88,6 +90,13 @@ MetaManager::MetaManager() {
   for (auto& remote_node : remote_nodes) {
     GetMRMeta(remote_node);
   }
+#else
+    rkey_table_ = new rkeyTable();
+    ep_ = zEP_create("/users/X1aoyang/Motor_Zep/config/zrdma_client_config.json");
+    pd_ = zPD_create(ep_, 1);
+    load_config("/users/X1aoyang/Motor_Zep/config/target_config.json", &config);
+#endif
+
   RDMA_LOG(INFO) << "All remote mr meta received!";
 }
 

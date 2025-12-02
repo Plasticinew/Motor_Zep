@@ -46,11 +46,12 @@
 #define OUTPUT_KEY_STAT 0
 
 /*********************** Crash test only **********************/
-#define PROBE_TP 0  // Probing throughput during execution
+#define PROBE_TP 1  // Probing throughput during execution
 #define HAVE_COORD_CRASH 0
-#define HAVE_PRIMARY_CRASH 0
+#define HAVE_PRIMARY_CRASH 1
 #define HAVE_BACKUP_CRASH 0
 #define CRASH_TABLE_ID 2
 #define PRIMARY_CRASH -33
 #define BACKUP_CRASH -13
 
+#define USE_ZRDMA 1
