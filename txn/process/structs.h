@@ -4,8 +4,12 @@
 #pragma once
 
 #include "memstore/hash_store.h"
-// #include "rlib/rdma_ctrl.hpp"
+#if USE_ZRDMA
 #include "zrdma/zQP.h"
+#include "zrdma/QP.hpp"
+#else
+#include "rlib/rdma_ctrl.hpp"
+#endif
 
 enum TXN_SYS : int {
   FaRMv2 = 1,

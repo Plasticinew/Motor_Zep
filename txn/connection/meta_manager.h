@@ -6,11 +6,14 @@
 #include <atomic>
 #include <unordered_map>
 
+#if USE_ZRDMA
 #include "zrdma/zQP.h"
 #include "zrdma/QP.hpp"
+#else
+#include "rlib/rdma_ctrl.hpp"
+#endif
 #include "base/common.h"
 #include "memstore/hash_store.h"
-// #include "rlib/rdma_ctrl.hpp"
 
 extern std::atomic<bool> primary_fail;
 extern std::atomic<bool> cannot_lock_new_primary;

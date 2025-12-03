@@ -11,8 +11,12 @@
 
 #include "memstore/cvt.h"
 #include "memstore/hash_store.h"
+#if USE_ZRDMA
 #include "zrdma/zQP.h"
-// #include "rlib/rdma_ctrl.hpp"
+#include "zrdma/QP.hpp"
+#else
+#include "rlib/rdma_ctrl.hpp"
+#endif
 
 // Load DB
 #include "micro/micro_db.h"

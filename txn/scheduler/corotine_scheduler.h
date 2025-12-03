@@ -7,8 +7,12 @@
 
 #include "base/common.h"
 #include "rlib/logging.hpp"
-// #include "rlib/rdma_ctrl.hpp"
+#if USE_ZRDMA
 #include "zrdma/zQP.h"
+#include "zrdma/QP.hpp"
+#else
+#include "rlib/rdma_ctrl.hpp"
+#endif
 #include "scheduler/coroutine.h"
 
 using namespace zrdma;

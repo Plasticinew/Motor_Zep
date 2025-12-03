@@ -5,8 +5,12 @@
 
 #include "base/common.h"
 #include "process/structs.h"
-// #include "rlib/rdma_ctrl.hpp"
+#if USE_ZRDMA
 #include "zrdma/zQP.h"
+#include "zrdma/QP.hpp"
+#else
+#include "rlib/rdma_ctrl.hpp"
+#endif
 #include "scheduler/corotine_scheduler.h"
 
 using namespace zrdma;
