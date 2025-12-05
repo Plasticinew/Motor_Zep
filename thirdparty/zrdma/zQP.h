@@ -366,6 +366,7 @@ namespace zrdma
         uint32_t worker_num_ = 0;
         WorkerInfo **worker_info_;
         thread **worker_threads_;
+        ibv_mr *mem_;
     };
 
     struct zQP_listener
@@ -378,6 +379,7 @@ namespace zrdma
         qp_info_table *qp_info;
         uint32_t qp_info_rkey[MAX_NIC_NUM];
         thread *flush_thread_;
+        ibv_mr *mem_;
     };
 
     struct zQP
@@ -474,6 +476,7 @@ namespace zrdma
     int load_config(const char *fname, struct zDeviceConfig *config);
     int load_config(const char *fname, struct zTargetConfig *config);
 
+    int zQP_reg_mem(zQP_listener *zqp, void* addr, size_t length);
     ibv_mr *mr_create(ibv_pd *pd, void *addr, size_t length);
     ibv_mr *mr_malloc_create(zPD *pd, uint64_t &addr, size_t length);
     ibv_mr *mr_create(zPD *pd, void* addr, size_t length);

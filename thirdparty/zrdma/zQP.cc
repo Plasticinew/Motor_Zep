@@ -3528,6 +3528,19 @@ namespace zrdma
         return primary_mr;
     }
 
+    int zQP_reg_mem(zQP_listener *zqp, void* addr, size_t length)
+    {
+        ibv_mr *mr = mr_create(zqp->m_pd, addr, length);
+        if (mr == NULL)
+        {
+            printf("Error, register memory failed\n");
+            return -1;
+        }
+        zqp->mem_ = mr;
+        return 0;
+
+    }
+
     int zQP_listen(zQP_listener *zqp, int nic_index, string ip, string port)
     {
         if (zqp->listeners.find(nic_index) != zqp->listeners.end())
@@ -3536,7 +3549,7 @@ namespace zrdma
         }
         zQP_responder *qp = new zQP_responder();
         zqp->listeners[nic_index] = qp;
-
+        qp->mem_ = zqp->mem_;
         qp->worker_info_ = new WorkerInfo *[MAX_SERVER_WORKER * MAX_SERVER_CLIENT];
         qp->worker_threads_ = new std::thread *[MAX_SERVER_WORKER];
         qp->pd_ = zqp->m_pd->m_pds[nic_index];
@@ -3581,11 +3594,11 @@ namespace zrdma
 
     void zQP_worker(zPD *pd, zQP_responder *qp_instance, WorkerInfo *work_info, uint32_t num)
     {
-        ibv_mr *cache_mr;
-        uint64_t cache_addr;
-        uint64_t cache_size = (size_t)1024*1024*1024*(6) + (size_t)1024*1024*2500;
-        cache_mr = mr_malloc_create(pd, cache_addr,
-                                cache_size);
+        // ibv_mr *cache_mr;
+        // uint64_t cache_addr;
+        // uint64_t cache_size = (size_t)1024*1024*1024*(6) + (size_t)1024*1024*2500;
+        // cache_mr = mr_malloc_create(pd, cache_addr,
+        //                         cache_size);
         printf("start worker %d\n", num);
         CmdMsgBlock *cmd_msg = work_info->cmd_msg;
         CmdMsgRespBlock *cmd_resp = work_info->cmd_resp_msg;
@@ -3653,9 +3666,9 @@ namespace zrdma
             {
                 RegisterRequest *reg_req = (RegisterRequest *)request;
                 RegisterResponse *resp_msg = (RegisterResponse *)cmd_resp;
-                resp_msg->addr = (uint64_t)(cache_mr->addr);
+                resp_msg->addr = (uint64_t)(qp_instance->mem_->addr);
                 tbb::concurrent_hash_map<ibv_mr *, tbb::concurrent_vector<ibv_mr *>>::accessor a;
-                pd->m_mrs.find(a, cache_mr);
+                pd->m_mrs.find(a, qp_instance->mem_);
                 for (int i = 0; i < a->second.size(); i++)
                 {
                     resp_msg->rkey[i] = a->second[i]->rkey;

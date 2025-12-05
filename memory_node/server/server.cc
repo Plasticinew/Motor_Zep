@@ -59,9 +59,12 @@ void Server::InitRDMA()
     pd = zPD_create(ep, 1);
     table = new rkeyTable();
     qp = zQP_listener_create(pd, ep);
+    zQP_reg_mem(qp, mem_region, data_size + delta_size);
+    
     for(int i = 0; i < MAX_NIC_NUM; i++) {
         listener[i] = std::thread(&zQP_listen, qp, i, std::ref(ep->m_devices[i]->eth_ip), std::ref(ep->m_devices[i]->port));
     }
+
 #else
     rdma_ctrl = std::make_shared<RdmaCtrl>(server_node_id, local_port);
     RdmaCtrl::DevIdx idx{.dev_id = 2, .port_id = 1}; // using the first RNIC's first port
