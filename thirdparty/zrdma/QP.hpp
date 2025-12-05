@@ -1,4 +1,5 @@
 #include "zQP.h"
+#include "rlib/logging.hpp"
 
 namespace zrdma
 {
@@ -30,6 +31,7 @@ public:
         zQP_RPC_GetAddr(rpc_qp_, &remote_mr_.buf, &remote_mr_.key);
         local_mr_.buf = local_addr;
         local_mr_.key = lkey;
+        RDMA_LOG(INFO) << "RCQP created! local_addr: " << local_mr_.buf << ", remote_addr: " << remote_mr_.buf << ", remote_rkey: " << remote_mr_.key;
     }
     ~RCQP() = default;
     ConnStatus post_send(ibv_wr_opcode op, char* local_buf, uint32_t len, uint64_t off, int flags,
@@ -56,13 +58,23 @@ public:
         sr.wr.rdma.remote_addr = remote_mr_.buf + off;
         sr.wr.rdma.rkey = remote_mr_.key;
         std::vector<uint64_t> wr_ids;
-        z_post_send_async(qp_, &sr, &bad_sr, true, 0, &wr_ids, true, -1);
+        RDMA_LOG(INFO) << "post_send opcode: " << op << ", local_buf: " << (void*)sge.addr << ", len: " << sge.length 
+                      << ", remote_addr: " << sr.wr.rdma.remote_addr << ", rkey: " << sr.wr.rdma.rkey << ", wr_id: " << wr_id;
+        z_post_send_async(qp_, &sr, &bad_sr, true, 0, &wr_ids, true, -1, wr_id);
         return SUCC;
     }
 
     ConnStatus post_batch(struct ibv_send_wr* send_sr, ibv_send_wr** bad_sr_addr, int num = 0) {
         std::vector<uint64_t> wr_ids;
         int rc = z_post_send_async(qp_, send_sr, bad_sr_addr, true, 0, &wr_ids, true, -1);
+        auto p = send_sr;
+        while(p != nullptr) {
+            RDMA_LOG(INFO) << "post batch opcode: " << p->opcode << ", local_buf: " << (void*)p->sg_list->addr 
+                          << ", len: " << p->sg_list->length << ", remote_addr: " << p->wr.rdma.remote_addr 
+                          << ", rkey: " << p->wr.rdma.rkey << ", wr_id: " << p->wr_id;
+            p = p->next;
+        }
+        // RDMA_LOG(INFO) << "post batch rc: " << rc;
         return rc == 0 ? SUCC : ERR;
     }
 
@@ -74,11 +86,14 @@ public:
 
     ConnStatus poll_till_completion(ibv_wc& wc, struct timeval timeout = default_timeout) {
         int result = z_poll_till_completion(qp_);
+        // RDMA_LOG(INFO) << "poll till completion result: " << result;
         return result >= 0 ? SUCC : ERR;
     }
 
     int poll_send_completion(ibv_wc& wc) {
-        return z_poll_send_completion(qp_, wc);
+        int result = z_poll_send_completion(qp_, wc);
+        // RDMA_LOG(INFO) << "poll send completion result: " << result;
+        return result;
     }
 
     mr local_mr_;

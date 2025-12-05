@@ -46,7 +46,7 @@ class QPManager {
       } while (rc != SUCC);
 #else
       ibv_mr* local_mr = meta_man->mr_map[CLIENT_MR_ID];
-      data_qps[remote_node.node_id] = new RCQP(meta_man->rkey_table_, meta_man->config, meta_man->ep_, meta_man->pd_, remote_node.ip, std::to_string(remote_node.port), (uint64_t)local_mr->addr, local_mr->lkey);
+      data_qps[remote_node.node_id] = new RCQP(meta_man->rkey_table_, meta_man->config, meta_man->ep_, meta_man->pd_, meta_man->config.target_ips[remote_node.node_id], meta_man->config.target_ports[remote_node.node_id], (uint64_t)local_mr->addr, local_mr->lkey);
 #endif
     }
   }

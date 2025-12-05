@@ -9,7 +9,7 @@
 
 // #define SEND_TWICE
 
-// #define ASYNC_CONNECT
+#define ASYNC_CONNECT
 
 // #define NO_ERROR_HANDLE
 
@@ -2073,7 +2073,7 @@ namespace zrdma
     int zQP_post_send_async(zQP *zqp, ibv_send_wr *send_wr, ibv_send_wr **bad_wr, bool non_idempotent,
                             uint32_t time_stamp, vector<uint64_t> *wr_ids, bool unique_cas, int max_depth, int wr_id)
     {
-                vector<ibv_send_wr*> copy_wrs;
+        vector<ibv_send_wr*> copy_wrs;
         vector<ibv_sge*> copy_sges;
         vector<zWR_entry*> wr_entries;
         ibv_send_wr *copy_wr = new ibv_send_wr();
@@ -2083,6 +2083,7 @@ namespace zrdma
         int start_index = -1;
         int end_index = 0;
         bool retry = false;
+        ibv_send_wr *last_wr = p;
         // deep copy
         zQP_requestor *requestor = zqp->m_requestors[zqp->current_device];
         int depth = 0;
@@ -2207,9 +2208,13 @@ namespace zrdma
                 log_wr->wr.rdma.rkey = requestor->server_cmd_rkey_[zqp->current_device];
                 q->next = log_wr;
                 q->send_flags &= ~IBV_SEND_SIGNALED;
+                last_wr = q;
                 q = q->next;
             }
             p = p->next;
+            if( p!= NULL) {
+                last_wr = p;
+            }
             if (p != NULL && (max_depth < 0 || depth < max_depth))
             {
                 q->next = new ibv_send_wr();
@@ -2221,13 +2226,18 @@ namespace zrdma
                 break;
             }
         }
-        q->send_flags |= IBV_SEND_SIGNALED;
+        if(last_wr->send_flags & IBV_SEND_SIGNALED) {
+            q->send_flags |= IBV_SEND_SIGNALED;
+        } else {
+            q->send_flags &= ~IBV_SEND_SIGNALED;
+        }
+        // q->send_flags |= IBV_SEND_SIGNALED;
         if(wr_id != -1) {
             q->wr_id = wr_id;
         }
         if (retry != non_idempotent)
         {
-            std::cerr << "Warning, inconsistent non_idempotent flag" << std::endl;
+            // std::cerr << "Warning, inconsistent non_idempotent flag" << std::endl;
             non_idempotent = retry;
         }
 
