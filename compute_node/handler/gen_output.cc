@@ -66,7 +66,7 @@ void TimeStop(t_id_t thread_num_per_machine, int tp_probe_interval_us) {
   }
 }
 
-void Handler::GenThreads(std::string bench_name) {
+void Handler::GenThreads(std::string bench_name) {  
   std::string config_filepath = "../../../config/cn_config.json";
   auto json_config = JsonConfig::load_file(config_filepath);
   auto client_conf = json_config.get("local_compute_node");
@@ -199,6 +199,18 @@ void Handler::GenThreads(std::string bench_name) {
   std::thread time_stop = std::thread(TimeStop, thread_num_per_machine, tp_probe_inter_us);
 #endif
 
+#if NETWORK_CRASH
+
+    int crash_time_ms = (int)client_conf.get("crash_time_ms").get_int64();
+    std::cerr << "sleeping " << (double)crash_time_ms / 1000.0 << " seconds..." << std::endl;
+    // usleep(crash_time_ms * 1000 + random() % 1000);
+    usleep(crash_time_ms * 1000);
+    
+    std::cerr << "network crashes!\n";
+    
+    system("sudo ip link set ens1f0 down");
+
+#endif
 #if HAVE_PRIMARY_CRASH
 
   int crash_time_ms = (int)client_conf.get("crash_time_ms").get_int64();

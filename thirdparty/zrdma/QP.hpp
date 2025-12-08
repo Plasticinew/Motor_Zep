@@ -1,3 +1,5 @@
+#pragma once
+
 #include "zQP.h"
 #include "rlib/logging.hpp"
 
@@ -22,11 +24,16 @@ class RCQP{
         uint32_t key;   
     };
 public:
-    RCQP(rkeyTable* rkey_table_, zTargetConfig& config, zEndpoint* ep_, zPD* pd_, string ip, string port, uint64_t local_addr, uint32_t lkey) {
+    RCQP(uint32_t *m_fast_rkey_, rkeyTable* rkey_table_, zTargetConfig& config, zEndpoint* ep_, zPD* pd_, string ip, string port, uint64_t local_addr, uint32_t lkey) {
+        // m_fast_rkey_ = m_fast_rkey_;
         rpc_qp_ = zQP_create(pd_, ep_, rkey_table_, ZQP_RPC);
+        rpc_qp_->m_fast_rkey = m_fast_rkey_;
         zQP_connect(rpc_qp_, 0, ip, port);
         qp_ = zQP_create(pd_, ep_, rkey_table_, ZQP_ONESIDED);
+        qp_->m_fast_rkey = m_fast_rkey_;
+        qp_->bound_dcqps_ = pd_->bound_dcqps_.fetch_add(1);
         zQP_connect(qp_, 0, ip, port);
+        zQP_connect(qp_, 1, qp_->m_targets[1]->ip, qp_->m_targets[1]->port);
         uint64_t malloc_size = (size_t)1024*1024*1024*(6) + (size_t)1024*1024*2500;
         zQP_RPC_GetAddr(rpc_qp_, &remote_mr_.buf, &remote_mr_.key);
         local_mr_.buf = local_addr;
@@ -57,23 +64,23 @@ public:
 
         sr.wr.rdma.remote_addr = remote_mr_.buf + off;
         sr.wr.rdma.rkey = remote_mr_.key;
-        std::vector<uint64_t> wr_ids;
-        RDMA_LOG(INFO) << "post_send opcode: " << op << ", local_buf: " << (void*)sge.addr << ", len: " << sge.length 
-                      << ", remote_addr: " << sr.wr.rdma.remote_addr << ", rkey: " << sr.wr.rdma.rkey << ", wr_id: " << wr_id;
-        z_post_send_async(qp_, &sr, &bad_sr, true, 0, &wr_ids, true, -1, wr_id);
+        // RDMA_LOG(INFO) << "post_send opcode: " << op << ", local_buf: " << (void*)sge.addr << ", len: " << sge.length 
+        //               << ", remote_addr: " << sr.wr.rdma.remote_addr << ", rkey: " << sr.wr.rdma.rkey << ", wr_id: " << wr_id;
+        z_post_send_async(qp_, &sr, &bad_sr, true, 0, nullptr, true, -1, wr_id);
         return SUCC;
     }
 
     ConnStatus post_batch(struct ibv_send_wr* send_sr, ibv_send_wr** bad_sr_addr, int num = 0) {
-        std::vector<uint64_t> wr_ids;
-        int rc = z_post_send_async(qp_, send_sr, bad_sr_addr, true, 0, &wr_ids, true, -1);
+        int rc = z_post_send_async(qp_, send_sr, bad_sr_addr, true, 0, nullptr, true, -1);
         auto p = send_sr;
-        while(p != nullptr) {
-            RDMA_LOG(INFO) << "post batch opcode: " << p->opcode << ", local_buf: " << (void*)p->sg_list->addr 
-                          << ", len: " << p->sg_list->length << ", remote_addr: " << p->wr.rdma.remote_addr 
-                          << ", rkey: " << p->wr.rdma.rkey << ", wr_id: " << p->wr_id;
-            p = p->next;
-        }
+        int count = 0;
+        // while(p != nullptr) {
+        //     RDMA_LOG(INFO) << count << " post batch opcode: " << p->opcode << ", local_buf: " << (void*)p->sg_list->addr 
+        //                   << ", len: " << p->sg_list->length << ", remote_addr: " << p->wr.rdma.remote_addr 
+        //                   << ", rkey: " << p->wr.rdma.rkey << ", wr_id: " << p->wr_id;
+        //     p = p->next;
+        //     count++;
+        // }
         // RDMA_LOG(INFO) << "post batch rc: " << rc;
         return rc == 0 ? SUCC : ERR;
     }
@@ -92,7 +99,8 @@ public:
 
     int poll_send_completion(ibv_wc& wc) {
         int result = z_poll_send_completion(qp_, wc);
-        // RDMA_LOG(INFO) << "poll send completion result: " << result;
+        // if(result > 0)
+            // RDMA_LOG(INFO) << "poll send completion result: " << result;
         return result;
     }
 
@@ -101,7 +109,7 @@ public:
 private:
     zQP* rpc_qp_{nullptr};
     zQP* qp_{nullptr};
-
+    // uint32_t *m_fast_rkey_;
 
 };
 

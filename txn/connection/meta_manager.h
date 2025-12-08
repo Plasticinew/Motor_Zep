@@ -6,14 +6,15 @@
 #include <atomic>
 #include <unordered_map>
 
+#include "base/common.h"
+#include "memstore/hash_store.h"
 #if USE_ZRDMA
 #include "zrdma/zQP.h"
 #include "zrdma/QP.hpp"
 #else
 #include "rlib/rdma_ctrl.hpp"
 #endif
-#include "base/common.h"
-#include "memstore/hash_store.h"
+
 
 extern std::atomic<bool> primary_fail;
 extern std::atomic<bool> cannot_lock_new_primary;
@@ -225,7 +226,8 @@ public:
 #if !USE_ZRDMA
     RNicHandler *opened_rnic;
 #else
-    rkeyTable* rkey_table_;
+    rkeyTable* rkey_table_[MAX_REMOTE_NODE_NUM];
+    uint32_t* fast_rkey_table_[MAX_REMOTE_NODE_NUM];
     zTargetConfig config;
     zEndpoint* ep_;
     zPD* pd_;

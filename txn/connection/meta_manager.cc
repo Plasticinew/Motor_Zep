@@ -91,9 +91,13 @@ MetaManager::MetaManager() {
     GetMRMeta(remote_node);
   }
 #else
-    rkey_table_ = new rkeyTable();
+    
+    for (int i = 0; i < MAX_REMOTE_NODE_NUM; i++) {
+        rkey_table_[i] = new rkeyTable();
+        fast_rkey_table_[i] = new uint32_t();
+    }
     ep_ = zEP_create("/users/X1aoyang/Motor_Zep/config/zrdma_client_config.json");
-    pd_ = zPD_create(ep_, 1);
+    pd_ = zPD_create(ep_, 100);
     load_config("/users/X1aoyang/Motor_Zep/config/target_config.json", &config);
 #endif
 

@@ -9,7 +9,9 @@ int main(int argc, char* argv[]) {
     std::cerr << "./run <benchmark_name> <thread_num> <coroutine_num> <isolation_level>" << std::endl;
     return 0;
   }
-
+system("sudo ip link set ens1f0 up");
+system("sudo ifconfig ens1f0 10.10.1.1/24");
+sleep(10);
   Handler* handler = new Handler();
 
   handler->ConfigureComputeNode(argc, argv);

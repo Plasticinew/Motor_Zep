@@ -4,13 +4,14 @@
 #pragma once
 
 /*********************** Configure workload **********************/
-#define WORKLOAD_TPCC 1
+#define WORKLOAD_TPCC 0
 #define WORKLOAD_TATP 0
 #define WORKLOAD_SmallBank 0
-#define WORKLOAD_MICRO 0
+#define WORKLOAD_MICRO 1
 
 #if WORKLOAD_TPCC
-#define MAX_VALUE_SIZE 664
+// #define MAX_VALUE_SIZE 131072
+#define MAX_VALUE_SIZE 665
 #define MAX_VCELL_NUM 4
 
 #elif WORKLOAD_TATP
@@ -54,4 +55,5 @@
 #define PRIMARY_CRASH -33
 #define BACKUP_CRASH -13
 
-#define USE_ZRDMA 0
+#define USE_ZRDMA 1
+#define NETWORK_CRASH 1

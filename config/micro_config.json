@@ -4,7 +4,7 @@
     "is_skewed": true,
     "zipf_theta": 0.99,
     "data_set_size": 1,
-    "write_ratio": 80,
+    "write_ratio": 100,
     "attempted_num": 1000000
   }
 }

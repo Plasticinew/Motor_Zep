@@ -330,7 +330,7 @@ void RunTPCC(coro_yield_t& yield, coro_id_t coro_id, int finished_num) {
     TPCCTxType tx_type = tpcc_workgen_arr[FastRand(&seed) % 100];
     uint64_t iter = ++tx_id_generator;  // Global atomic transaction id
     stat_attempted_tx_total++;
-    RDMA_LOG(INFO) << "Thread " << thread_gid << " attemps txn " << stat_attempted_tx_total << " txn id: " << iter;
+    // RDMA_LOG(INFO) << "Thread " << thread_gid << " attemps txn " << stat_attempted_tx_total << " txn id: " << iter;
 
     clock_gettime(CLOCK_REALTIME, &tx_start_time);
     switch (tx_type) {
@@ -377,7 +377,7 @@ void RunTPCC(coro_yield_t& yield, coro_id_t coro_id, int finished_num) {
       clock_gettime(CLOCK_REALTIME, &tx_end_time);
       double tx_usec = (tx_end_time.tv_sec - tx_start_time.tv_sec) * 1000000 + (double)(tx_end_time.tv_nsec - tx_start_time.tv_nsec) / 1000;
       timer[stat_committed_tx_total++] = tx_usec;
-      RDMA_LOG(INFO) << "Thread " << thread_gid << " committed txn " << stat_committed_tx_total << " txn id: " << iter;
+    //   RDMA_LOG(INFO) << "Thread " << thread_gid << " committed txn " << stat_committed_tx_total << " txn id: " << iter;
     }
 
     if (stat_attempted_tx_total >= (ATTEMPTED_NUM - finished_num)) {
@@ -486,7 +486,12 @@ void RunMICRO(coro_yield_t& yield, coro_id_t coro_id) {
 
       if (tx_committed) thread_local_commit_times[uint64_t(MicroTxType::kReadOne)]++;
     }
-
+    // printf("Thread %u coro %u txn %lu key %lu %s\n",
+    //        thread_gid,
+    //        coro_id,
+    //        iter,
+    //        key,
+    //        tx_committed ? "committed" : "aborted");
     /********************************** Stat begin *****************************************/
     // Stat after one transaction finishes
     if (tx_committed) {

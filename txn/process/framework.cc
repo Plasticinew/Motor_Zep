@@ -179,7 +179,7 @@ void TXN::Abort() {
     }
 #endif
     RCQP* primary_qp = thread_qp_man->GetRemoteDataQPWithNodeID(primary_node_id);
-    auto rc = primary_qp->post_send(IBV_WR_RDMA_WRITE, unlock_buf, sizeof(lock_t), read_write_set[index]->GetRemoteLockAddr(), 0);
+    auto rc = primary_qp->post_send(IBV_WR_RDMA_WRITE, unlock_buf, sizeof(lock_t), read_write_set[index]->GetRemoteLockAddr(), magic_number);
     if (rc != SUCC) {
       RDMA_LOG(FATAL) << "Thread " << t_id << " , Coroutine " << coro_id << " unlock fails during abortion";
     }

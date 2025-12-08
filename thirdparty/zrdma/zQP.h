@@ -30,6 +30,8 @@ using std::vector;
 namespace zrdma
 {
 
+const uint64_t magic_number = 0xdeadbeefcafebabe;
+
 #define NOTIFY_WORK 0xFF
 #define NOTIFY_IDLE 0x00
 #define MAX_MSG_SIZE 16384
@@ -38,7 +40,7 @@ namespace zrdma
 #define RESOLVE_TIMEOUT_MS 5000
 #define RDMA_TIMEOUT_US (uint64_t)10000000
 // #define RETRY_TIMEOUT 0
-#define RETRY_TIMEOUT 7
+#define RETRY_TIMEOUT 0
 #define MAX_REQUESTOR_NUM 32768
 #define MAX_REMOTE_SIZE (1UL << 25)
 
@@ -201,7 +203,7 @@ namespace zrdma
     };
     CHECK_RDMA_MSG_SIZE(RegisterResponse);
 
-#define WR_ENTRY_NUM 1024
+#define WR_ENTRY_NUM 16384
 #define MAX_QP_NUM 1024
 #define ATOMIC_ENTRY_NUM 512
 
@@ -225,7 +227,7 @@ namespace zrdma
         uint8_t port_num_;
         uint16_t lid_;
         uint32_t dct_num_;
-        // atomic<uint64_t> size_counter_{0};
+        atomic<uint64_t> send_counter_{0};
     };
 
     struct zDCQP_responder
@@ -248,11 +250,14 @@ namespace zrdma
     struct zPD
     {
         tbb::concurrent_vector<ibv_pd *> m_pds;
-        tbb::concurrent_hash_map<ibv_mr *, tbb::concurrent_vector<ibv_mr *>> m_mrs;
-        tbb::concurrent_hash_map<uint32_t, tbb::concurrent_vector<uint32_t>> m_lkey_table;
+        tbb::concurrent_hash_map<ibv_mr *, tbb::concurrent_vector<ibv_mr *>*> m_mrs;
+        tbb::concurrent_hash_map<uint32_t, tbb::concurrent_vector<uint32_t>*> m_lkey_table;
+        uint32_t m_fast_lkey;
+        // unordered_map<uint32_t, uint32_t> m_fast_lkey_table;
         vector<vector<zDCQP_requestor *>> m_requestors;
         vector<vector<zDCQP_responder *>> m_responders;
         std::mutex pd_mutex;
+        std::atomic<int> bound_dcqps_{0};
     };
 
     struct zWR_entry
@@ -338,7 +343,7 @@ namespace zrdma
         uint32_t dct_num_;
     };
 
-    typedef unordered_map<uint32_t, vector<uint32_t>> rkeyTable;
+    typedef unordered_map<uint32_t, vector<uint32_t>*> rkeyTable;
 
     struct cq_info
     {
@@ -387,6 +392,9 @@ namespace zrdma
         zPD *m_pd;
         zEndpoint *m_ep;
         rkeyTable *m_rkey_table;
+        bool no_signal_table[32];
+        // tbb::concurrent_hash_map<uint32_t, uint32_t> *m_fast_rkey_table;
+        uint32_t *m_fast_rkey;
         tbb::concurrent_vector<zQP_requestor *> m_requestors;
         unordered_map<int, zTarget *> m_targets;
         int primary_device = 0;
@@ -397,6 +405,8 @@ namespace zrdma
         unordered_map<int, ibv_mr *> msg_mr_;
         unordered_map<int, ibv_mr *> resp_mr_;
         zWR_entry wr_entry_[WR_ENTRY_NUM];
+        ibv_send_wr wr_buffer_[WR_ENTRY_NUM];
+        ibv_sge sge_buffer_[WR_ENTRY_NUM];
         int entry_start_ = 0;
         std::atomic<int> entry_end_{0};
         std::atomic<uint64_t> size_counter_{0};
@@ -406,6 +416,7 @@ namespace zrdma
         uint32_t remote_atomic_table_rkey[MAX_NIC_NUM];
         uint64_t remote_qp_info_addr = 0;
         uint32_t remote_qp_info_rkey[MAX_NIC_NUM];
+        int bound_dcqps_ = 0;
     };
 
     zEndpoint *zEP_create(string config_file);
@@ -421,6 +432,7 @@ namespace zrdma
     int zDCQP_write(zDCQP_requestor *requestor, ibv_ah *ah, void *local_addr, uint32_t lkey, uint64_t length, void *remote_addr, uint32_t rkey, uint32_t lid, uint32_t dct_num);
     int zDCQP_CAS(zDCQP_requestor *requestor, ibv_ah *ah, void *local_addr, uint32_t lkey, uint64_t new_val, void *remote_addr, uint32_t rkey, uint32_t lid, uint32_t dct_num);
     int zDCQP_send(zQP *zqp, zDCQP_requestor *requestor, ibv_ah *ah, ibv_send_wr *send_wr, uint32_t lid, uint32_t dct_num, int max_depth=-1);
+    int zDCQP_send_async(zQP *zqp, zDCQP_requestor *requestor, ibv_ah *ah, ibv_send_wr *send_wr, uint32_t lid, uint32_t dct_num, int max_depth);
 
     zDCQP_responder *zDCQP_create_responder(zDevice *device, ibv_pd *pd);
     zQP_listener *zQP_listener_create(zPD *pd, zEndpoint *ep);

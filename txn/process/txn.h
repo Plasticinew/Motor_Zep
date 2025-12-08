@@ -682,7 +682,7 @@ ALWAYS_INLINE
 bool TXN::RDMAWriteRoundTrip(RCQP* qp, char* wt_data,
                              uint64_t remote_offset,
                              size_t size) {
-  auto rc = qp->post_send(IBV_WR_RDMA_WRITE, wt_data, size, remote_offset, 0);
+  auto rc = qp->post_send(IBV_WR_RDMA_WRITE, wt_data, size, remote_offset, 0, magic_number);
   if (rc != SUCC) {
     return false;
   }
@@ -697,7 +697,7 @@ bool TXN::RDMAWriteRoundTrip(RCQP* qp, char* wt_data,
 ALWAYS_INLINE
 bool TXN::RDMAReadRoundTrip(RCQP* qp, char* rd_data,
                             uint64_t remote_offset, size_t size) {
-  auto rc = qp->post_send(IBV_WR_RDMA_READ, rd_data, size, remote_offset, 0);
+  auto rc = qp->post_send(IBV_WR_RDMA_READ, rd_data, size, remote_offset, 0, magic_number);
   if (rc != SUCC) {
     return false;
   }

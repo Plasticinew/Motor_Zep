@@ -7,13 +7,13 @@
 
 #include "base/common.h"
 #include "rlib/logging.hpp"
+#include "scheduler/coroutine.h"
 #if USE_ZRDMA
 #include "zrdma/zQP.h"
 #include "zrdma/QP.hpp"
 #else
 #include "rlib/rdma_ctrl.hpp"
 #endif
-#include "scheduler/coroutine.h"
 
 using namespace zrdma;
 
@@ -100,6 +100,9 @@ void CoroutineScheduler::AddPendingQP(coro_id_t coro_id, RCQP* qp) {
 ALWAYS_INLINE
 void CoroutineScheduler::RDMABatch(coro_id_t coro_id, RCQP* qp, ibv_send_wr* send_sr, ibv_send_wr** bad_sr_addr, int piggyback_num) {
   // piggyback_num should be 1 less than the total number of batched reqs
+  for(int i = 0; i < piggyback_num; i++) {
+    send_sr[i].wr_id = magic_number;
+  }
   send_sr[piggyback_num].wr_id = coro_id;
   auto rc = qp->post_batch(send_sr, bad_sr_addr);
   if (rc != SUCC) {
@@ -110,6 +113,9 @@ void CoroutineScheduler::RDMABatch(coro_id_t coro_id, RCQP* qp, ibv_send_wr* sen
 
 ALWAYS_INLINE
 bool CoroutineScheduler::RDMABatchSync(coro_id_t coro_id, RCQP* qp, ibv_send_wr* send_sr, ibv_send_wr** bad_sr_addr, int piggyback_num) {
+    for(int i = 0; i < piggyback_num; i++) {
+    send_sr[i].wr_id = magic_number;
+  }
   send_sr[piggyback_num].wr_id = coro_id;
   auto rc = qp->post_batch(send_sr, bad_sr_addr);
   if (rc != SUCC) {
@@ -147,7 +153,7 @@ void CoroutineScheduler::RDMARead(coro_id_t coro_id, RCQP* qp, char* rd_data, ui
 
 ALWAYS_INLINE
 bool CoroutineScheduler::RDMAReadInv(coro_id_t coro_id, RCQP* qp, char* rd_data, uint64_t remote_offset, size_t size) {
-  auto rc = qp->post_send(IBV_WR_RDMA_READ, rd_data, size, remote_offset, 0, 0);
+  auto rc = qp->post_send(IBV_WR_RDMA_READ, rd_data, size, remote_offset, 0, magic_number);
   if (rc != SUCC) {
     RDMA_LOG(ERROR) << "client: post read fail. rc=" << rc << ", tid = " << t_id << ", coroid = " << coro_id;
     return false;
@@ -245,15 +251,23 @@ void CoroutineScheduler::PollCompletion(t_id_t tid) {
       it++;
       continue;
     }
-    if (unlikely(wc.status != IBV_WC_SUCCESS)) {
-    //   TLOG(INFO, tid) << "Bad completion status: " << wc.status << " with error " << ibv_wc_status_str(wc.status) << ";@ node " << qp->idx_.node_id;
-      if (wc.status != IBV_WC_RETRY_EXC_ERR) {
-        TLOG(INFO, tid) << "completion status != IBV_WC_RETRY_EXC_ERR. abort()";
-        abort();
-      } else {
-        it++;
-        continue;
-      }
+    while (unlikely(wc.status != IBV_WC_SUCCESS)) {
+    //   TLOG(INFO, tid) << "Bad completion status: " << wc.status << " with error " << ibv_wc_status_str(wc.status) << ";@ node " << tid;
+    //   if (wc.status != IBV_WC_RETRY_EXC_ERR) {
+    //     TLOG(INFO, tid) << "completion status != IBV_WC_RETRY_EXC_ERR. abort()";
+    //     abort();
+    //   } else {
+        // it++;
+        // continue;
+    //   }
+        poll_result = qp->poll_send_completion(wc);  // The qp polls its own wc
+        if (poll_result == 0) {
+            break;
+        }
+    }
+    if (poll_result == 0) {
+      it++;
+      continue;
     }
     auto coro_id = wc.wr_id;
     if (coro_id == 0) continue;
