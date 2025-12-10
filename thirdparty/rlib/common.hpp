@@ -19,6 +19,9 @@ enum ConnStatus {
   UNKNOWN = 5
 };
 
+const uint64_t magic_number = 0xdeadbeefcafebabe;
+
+
 /**
  * The connection information exchanged between different QPs.
  * RC/UC QPs uses lid & addr to conncet to remote QPs, while qpn is used upon send requests.
